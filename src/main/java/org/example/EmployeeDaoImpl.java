@@ -1,10 +1,23 @@
 package org.example;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoDatabase;
+import org.example.MongoDB.MongoDBConnection;
+import org.bson.Document;
+import com.mongodb.client.MongoCollection;
+
+
 
 
 import java.sql.*;
 
 public class EmployeeDaoImpl implements EmployeeDaoIntrf {
     Connection con;
+    MongoDBConnection mongoDBConnection=new MongoDBConnection("ManagersDB");
+    MongoClient mongoClient=mongoDBConnection.getMongoClient();
+    MongoDatabase database=mongoDBConnection.getDatabase();
+    MongoCollection<Document> collection = database.getCollection("myCollection");
+
+
 
     @Override
     public void createEmployee(Employee emp) {
@@ -44,6 +57,13 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
                 try (ResultSet generatedKeys = pstm.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         long id = generatedKeys.getLong(1);
+                        Document document = new Document("Manager Name", emp.getManager())
+                                .append("employeeid", id);
+
+
+                        //Inserting document into the collection
+                        collection.insertOne(document);
+                        System.out.println("Document inserted successfully");
                         System.out.println("Employee Inserted Successfully! New Employee ID: " + id);
                     } else {
                         System.out.println("Employee inserted, but no ID was returned.");
