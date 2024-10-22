@@ -56,7 +56,7 @@ public class Main {
 
                     try {
                         emp.setDateOfJoining(dateFormat.parse(dateInput));
-                        System.out.println("Date of Joining: " + emp.getDateOfJoining());
+//                        System.out.println("Date of Joining: " + emp.getDateOfJoining());
                     } catch (ParseException e) {
                         System.out.println("Invalid date format. Please use yyyy-MM-dd.");
                     }
