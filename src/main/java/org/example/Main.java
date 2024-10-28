@@ -2,6 +2,11 @@ package org.example;
 
 import mongo.MongoDBTest;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Scanner;
+
 
 
 import java.text.ParseException;
@@ -10,9 +15,12 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        DBConnection.createDBConnetion();
 
 
         EmployeeDaoIntrf dao = new EmployeeDaoImpl();
+
+        LeaveManagementDAO leaveDao = new LeaveManagementDAO();
         System.out.println("Welcome to Employee management application");
 
         Scanner sc = new Scanner(System.in);
@@ -22,7 +30,12 @@ public class Main {
                     "3. Show Employee based on id \n" +
                     "4. Update the employee\n" +
                     "5. Deactivate the employee\n"+
-                    "6. Delete the employee\n");
+                    "6. Delete the employee\n"+
+                    "7. Apply for Leave\n" +
+                    "8. View Leave History\n" +
+                    "9. Manage Leave Requests (for managers)\n" +
+                    "10. Exit\n");
+
 
 
             System.out.println("Enter Choice: ");
@@ -63,6 +76,10 @@ public class Main {
 
                     System.out.println("Enter Phone Number: ");
                     String phoneNumber = sc.nextLine();
+//                    if(!utility.isValidPhoneNumber(phoneNumber)){
+//                        return;
+//                    }
+
 
                     System.out.println("Enter Email: ");
                     String email = sc.nextLine();
@@ -78,7 +95,7 @@ public class Main {
 
                     try {
                         emp.setDOB(dateFormat.parse(dobInput));
-//                        emp.setAge(emp.calculateAge(dateFormat.parse(dobInput)));// Calculate age based on DOB
+//                        emp.setAge(emp.calculateAge(dateFormat.parse(dobInput)));
 
                     } catch (ParseException e) {
                         System.out.println("Invalid date format for date of birth. Please use yyyy-MM-dd.");
@@ -110,6 +127,7 @@ public class Main {
 
                     emp.setFullName(name);
                     dao.createEmployee(emp);
+                    System.out.println(emp);
 
                     break;
                 case 2:
@@ -123,12 +141,12 @@ public class Main {
                 case 4:
 
 
-                    // Prompt for employee ID
+
                     System.out.print("Enter the ID of the employee to update: ");
                     int id = sc.nextInt();
-                    sc.nextLine(); // Consume the newline character
+                    sc.nextLine();
 
-                    // Collect optional fields for the update
+
                     System.out.println("Enter the new first name (leave blank to skip):");
                     String firstName = sc.nextLine();
                     if (firstName.isEmpty()) firstName = null;
@@ -180,8 +198,9 @@ public class Main {
                     String isactive = sc.nextLine();
                     if (isactive.isEmpty()) isactive = null;
 
-                    // Call the updateEmployee method
+
                     dao.updateEmployee(id, firstName, middleName, lastName, department, position, dojInput, phone, address, manager, DOB, age, isactive);
+
 
 
                     break;
@@ -200,6 +219,99 @@ public class Main {
 
 
                 case 7:
+                    System.out.println("Enter Employee ID: ");
+                    int empId = sc.nextInt();
+                    sc.nextLine();
+
+                    System.out.println("Enter Leave Type (CASUAL, SICK, VACATION): ");
+                    String leaveType = sc.nextLine();
+
+                    System.out.println("Enter Start Date (yyyy-MM-dd): ");
+                    String startDateStr = sc.nextLine();
+
+                    System.out.println("Enter End Date (yyyy-MM-dd): ");
+                    String endDateStr = sc.nextLine();
+
+                    System.out.println("Enter Reason: ");
+                    String reason = sc.nextLine();
+
+                    try {
+                        dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        LeaveRequest leaveRequest = new LeaveRequest(
+                                empId,
+                                leaveType,
+                                dateFormat.parse(startDateStr),
+                                dateFormat.parse(endDateStr),
+                                reason
+                        );
+                        leaveDao.applyLeave(leaveRequest);
+                    } catch (ParseException e) {
+                        System.out.println("Invalid date format. Please use yyyy-MM-dd");
+                    }
+                    break;
+
+                case 8:
+                    System.out.println("Enter Employee ID: ");
+                    empId = sc.nextInt();
+                    List<LeaveRequest> leaveHistory = leaveDao.getEmployeeLeaveHistory(empId);
+
+                    System.out.println("\nLeave History:");
+                    System.out.println("----------------------------------------");
+                    for (LeaveRequest leave : leaveHistory) {
+                        System.out.printf("Leave ID: %s\nType: %s\nFrom: %s\nTo: %s\nStatus: %s\n",
+                                leave.getId(),
+                                leave.getLeaveType(),
+                                leave.getStartDate(),
+                                leave.getEndDate(),
+                                leave.getStatus());
+
+
+
+                        if (leave.getApproverComments() != null) {
+                            System.out.println("Comments: " + leave.getApproverComments());
+                        }
+                        System.out.println("----------------------------------------");
+                    }
+                    break;
+
+                case 9:
+                    List<LeaveRequest> pendingLeaves = leaveDao.getPendingLeaves();
+
+                    if (pendingLeaves.isEmpty()) {
+                        System.out.println("No pending leave requests.");
+                        break;
+                    }
+
+                    System.out.println("\nPending Leave Requests:");
+                    System.out.println("----------------------------------------");
+                    for (LeaveRequest leave : pendingLeaves) {
+                        System.out.printf("Leave ID: %s\nEmployee ID: %d\nType: %s\nFrom: %s\nTo: %s\nReason: %s\n",
+                                leave.getId(),
+                                leave.getEmployeeId(),
+                                leave.getLeaveType(),
+                                leave.getStartDate(),
+                                leave.getEndDate(),
+                                leave.getReason());
+                        System.out.println("----------------------------------------");
+                    }
+
+                    System.out.println("Enter Leave ID to process (or 0 to skip): ");
+                    sc.nextLine();
+                    String leaveId = sc.nextLine();
+
+                    if (!leaveId.equals("0")) {
+                        System.out.println("Enter Status (APPROVED/REJECTED): ");
+                        String status = sc.nextLine();
+
+                        System.out.println("Enter Comments: ");
+                        String comments = sc.nextLine();
+
+                        leaveDao.updateLeaveStatus(leaveId, status, comments);
+                    }
+                    break;
+
+
+                case 10:
                     System.out.println("Thank you for using our Application !!!");
                     System.exit(0);
                 default:

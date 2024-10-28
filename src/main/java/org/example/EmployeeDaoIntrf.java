@@ -15,4 +15,7 @@ public interface EmployeeDaoIntrf {
     public void deactivateEmployee(int id);
 
     public  void deleteEmployee(int id);
+
+    boolean employeeExists(long employeeId);
+
 }

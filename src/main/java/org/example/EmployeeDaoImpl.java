@@ -9,13 +9,33 @@ import com.mongodb.client.MongoCollection;
 
 
 import java.sql.*;
+import java.util.Scanner;
 
 public class EmployeeDaoImpl implements EmployeeDaoIntrf {
+    Scanner sc=new Scanner(System.in);
     Connection con;
-    MongoDBConnection mongoDBConnection=new MongoDBConnection("ManagersDB");
-    MongoClient mongoClient=mongoDBConnection.getMongoClient();
-    MongoDatabase database=mongoDBConnection.getDatabase();
-    MongoCollection<Document> collection = database.getCollection("myCollection");
+//    MongoDBConnection mongoDBConnection=new MongoDBConnection("ManagersDB");
+//    MongoClient mongoClient=mongoDBConnection.getMongoClient();
+//    MongoDatabase database=mongoDBConnection.getDatabase();
+//    MongoCollection<Document> collection = database.getCollection("myCollection");
+  @Override
+    public boolean employeeExists(long employeeId) {
+      con = DBConnection.createDBConnetion();
+
+      String query = "SELECT COUNT(*) FROM employees WHERE id = ?";
+    try (PreparedStatement pstmt = con.prepareStatement(query)) {
+        pstmt.setLong(1, employeeId);
+        ResultSet rs = pstmt.executeQuery();
+        if (rs.next()) {
+            return rs.getInt(1) > 0;
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return false;
+  }
+
+
 
 
 
@@ -23,7 +43,12 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
     public void createEmployee(Employee emp) {
         // Establish the database connection
         con = DBConnection.createDBConnetion();
-        String query = "INSERT INTO employees (firstName, middleName, lastName, salary, department, position, DOJ, phone, email, address, manager, DOB, age, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        System.out.println("enter table name");
+        String table=sc.nextLine();
+        if (!table.matches("^[a-zA-Z0-9]+$")) {
+            throw new IllegalArgumentException("Invalid table name format.");
+        }
+        String query = "INSERT INTO "+table+" (firstName, middleName, lastName, salary, department, position, DOJ, phone, email, address, manager, DOB, age, isActive) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement pstm = con.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -57,13 +82,14 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
                 try (ResultSet generatedKeys = pstm.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         long id = generatedKeys.getLong(1);
-                        Document document = new Document("Manager Name", emp.getManager())
-                                .append("employeeid", id);
+//                        Document document = new Document("Manager Name", emp.getManager())
+//                                .append("employeeid", id);
 
 
                         //Inserting document into the collection
-                        collection.insertOne(document);
-                        System.out.println("Document inserted successfully");
+//                        collection.insertOne(document);
+//                        System.out.println("Document inserted successfully");
+                        emp.setId((int) id);
                         System.out.println("Employee Inserted Successfully! New Employee ID: " + id);
                     } else {
                         System.out.println("Employee inserted, but no ID was returned.");
