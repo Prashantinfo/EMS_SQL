@@ -59,7 +59,7 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
             pstm.setString(5, emp.getDepartment());
             pstm.setString(6, emp.getPosition());
 
-            // Convert the Date object to java.sql.Date for the DOJ field
+
             Date doj = new Date(emp.getDateOfJoining().getTime());
             pstm.setDate(7, doj);
 
@@ -68,7 +68,7 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
             pstm.setString(10, emp.getAddress());
             pstm.setString(11, emp.getManager());
 
-            // Convert the Date object to java.sql.Date for the DOB field
+
             Date dob = new Date(emp.getDOB().getTime());
             pstm.setDate(12, dob);
 
@@ -78,7 +78,7 @@ public class EmployeeDaoImpl implements EmployeeDaoIntrf {
             // Execute the update
             int cnt = pstm.executeUpdate();
             if (cnt != 0) {
-                // Retrieve generated keys (ID)
+
                 try (ResultSet generatedKeys = pstm.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         long id = generatedKeys.getLong(1);
